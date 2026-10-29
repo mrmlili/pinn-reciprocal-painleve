@@ -1,0 +1,26 @@
+﻿# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Large model checkpoints
+*.pt
+*.pth
+
+# LaTeX intermediate
+*.aux
+*.log
+!results/*.log
+*.out
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.synctex.gz
+
+# OS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
