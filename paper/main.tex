@@ -42,7 +42,7 @@ $\theta = \log y$, in which exponentially growing source terms
 persist. As an empirical verification, we train physics-informed
 neural networks (PINNs) on both representations. The reciprocal
 representation reduces the median near-pole relative error by a factor of
-$\sim2581$ for the prototype across five seeds (per-seed ratios $16\times$--$7538\times$; median $2581\times$; two of ten seeds converge to suboptimal minima (8.3e-02 in the worst case)) and $\sim100$--$900$ for Painlev\'e~II
+$\sim2581$ for the prototype across five seeds (per-seed ratios $16\times$--$7538\times$; median $2581\times$; two of ten seeds converge to suboptimal minima (8.3e-02 in the worst case)) and median $\sim139$--$523$ for Painlev\'e~II across five seeds
 across $\alpha \in \{0,1,2\}$, compared to the direct PINN.
 Statistical variability across five random seeds is reported in full
 (median $3.1\times 10^{-4}$, coefficient of variation $0.69$).
@@ -323,19 +323,15 @@ outperforms the other two by two to three orders of magnitude.
 
 \begin{table}[t]
 \centering
-\caption{Painlev\'e II: $E_{\mathrm{rel,near}}$ for three
-representations and $\alpha\in\{0,1,2\}$. Seed 42; 15000 epochs.}
+\caption{Painlev\'e II: five-seed statistics (median [IQR]) for three representations and $\alpha\in\{0,1,2\}$. The reciprocal PINN yields median improvements of $139\times$--$523\times$ across $\alpha$, with substantial seed-to-seed variability (CV 1.08--1.61). Overall success rate (E$_{\mathrm{rel,near}}<10^{-2}$): 11/15 = 73\%. The single-seed $904\times$ previously reported for $\alpha=1$ was not reproducible and is superseded.}
 \label{tab:alpha}
 \begin{tabular}{cccccc}
 \toprule
-$\alpha$ & $t^*$ & Direct & Rapidity & Reciprocal & Ratio (D0/D2) \\
+$\alpha$ & Direct & Rapidity & Reciprocal & CV (D2) & Ratio \\
 \midrule
-0.0 & 1.2628 & $8.51\times 10^{-1}$ & $6.14\times 10^{-1}$
-    & $8.62\times 10^{-3}$ & $98.7\times$ \\
-1.0 & 1.1577 & $7.94\times 10^{-1}$ & $6.66\times 10^{-1}$
-    & $8.78\times 10^{-4}$ & $904.2\times$ \\
-2.0 & 1.0838 & $7.81\times 10^{-1}$ & $4.56\times 10^{-1}$
-    & $1.83\times 10^{-3}$ & $427.6\times$ \\
+0.0 & $7.49e-1$ & $6.19e-1$ & $\mathbf{1.43e-3}$ $[4.38e-4, 5.42e-3]$ & $1.61$ & $523\times$ \\
+1.0 & $7.65e-1$ & $6.46e-1$ & $\mathbf{5.51e-3}$ $[3.29e-4, 5.90e-3]$ & $1.08$ & $139\times$ \\
+2.0 & $7.46e-1$ & $5.65e-1$ & $\mathbf{3.36e-3}$ $[2.01e-3, 1.58e-2]$ & $1.33$ & $222\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}

@@ -7,7 +7,7 @@ Code and data for the paper:
 
 ## Abstract
 
-We propose the reciprocal transform w = 1/y as a regularization for second-order ODEs with movable poles, focusing on the prototype y'' = y^3 and Painlevé II. The transformation, together with the w^3-weighted residual (which is the natural residual for the reciprocal equation), reduces the median near-pole relative error by a factor of ~1450 for the prototype (10 seeds) and ~100–900 for Painlevé II. An ablation separates the transformation from the reweighting: the transformation alone and the reweighting alone both fail; only their combination produces the reciprocal-PINN result.
+We propose the reciprocal transform w = 1/y as a regularization for second-order ODEs with movable poles, focusing on the prototype y'' = y^3 and Painlevé II. The transformation, together with the w^3-weighted residual (which is the natural residual for the reciprocal equation), reduces the median near-pole relative error by a factor of ~1450 for the prototype (10 seeds; median 517× vs 5-seed baseline) and ~139–523 for Painlevé II (5 seeds × 3 α, median). An ablation separates the transformation from the reweighting: the transformation alone and the reweighting alone both fail; only their combination produces the reciprocal-PINN result.
 
 ## Reproduce
 
@@ -15,7 +15,7 @@ We propose the reciprocal transform w = 1/y as a regularization for second-order
 pip install -r requirements.txt
 python experiments/M1_ablation.py                # 2.5 h  -- Table M1
 python experiments/phase2_minimal_prototype.py   # 4 h    -- Table 1
-python experiments/p2_multiseed_full.py          # 12 h   -- Table 2
+python experiments/p2_multiseed_full.py          # 7-12 h -- Table 2 (resume-capable)
 python experiments/generate_figures.py           # 30 s   -- figures
 ```
 
