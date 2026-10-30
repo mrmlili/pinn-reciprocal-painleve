@@ -2,7 +2,6 @@
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23814431.svg)](https://doi.org/10.5281/zenodo.23814431)
 
-
 Code and data for the paper:
 
 > **Reciprocal Transform for Painlevé-Type Equations: A Mathematical Regularization with Physics-Informed Neural Network Verification**
