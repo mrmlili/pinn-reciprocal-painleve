@@ -42,8 +42,7 @@ $\theta = \log y$, in which exponentially growing source terms
 persist. As an empirical verification, we train physics-informed
 neural networks (PINNs) on both representations. The reciprocal
 representation reduces the median near-pole relative error by a factor of
-$\sim2581$ for the prototype across five seeds (per-seed ratios $16\times$--$7538\times$; median $2581\times$; two of ten seeds converge to suboptimal minima (8.3e-02 in the worst case)) and median $\sim139$--$523$ for Painlev\'e~II across five seeds
-across $\alpha \in \{0,1,2\}$, compared to the direct PINN.
+$\sim1456$ for the prototype (ten seeds; 20\% failure rate reported in full) and by median factors of $139\times$--$523\times$ for Painlev\'e~II across five seeds and three values of $\alpha$, compared to the direct PINN.
 Statistical variability across five random seeds is reported in full
 (median $3.1\times 10^{-4}$, coefficient of variation $0.69$ (single-$\alpha$ 30k-epoch study; multi-seed sweep reports CV 1.08--1.61)).
 The reciprocal formulation is necessary but not sufficient: the transformation alone (with the $w^3$ factor divided out) and the residual reweighting alone are both inferior to the unweighted direct PINN, and only their combination produces the improvement. A direct comparison with the adaptive
@@ -343,7 +342,7 @@ three representations. Note the logarithmic scale.}
 
 \subsection{Seed variability}
 
-\emph{Note on epoch count.} The prototype ablation (Table~\ref{tab:proto}) and the P-II parameter sweep (Table~\ref{tab:alpha}) use 15000 epochs, while the five-seed statistics (Table~\ref{tab:seeds}) use 30000 epochs with best-model checkpointing. Consequently, the seed-42 error reported in Table~\ref{tab:alpha} ($8.78\times 10^{-4}$) differs from the seed-42 entry in Table~\ref{tab:seeds} ($2.39\times 10^{-4}$). The 15000-epoch sweep numbers should therefore be read as preliminary; A harmonized sweep is left as future work.
+\emph{Note on epoch count.} The prototype ablation (Table~\ref{tab:proto}) and the P-II parameter sweep (Table~\ref{tab:alpha}) use 15000 epochs, while the five-seed statistics (Table~\ref{tab:seeds}) use 30000 epochs with best-model checkpointing. A harmonized multi-seed sweep across all $\alpha$ is left as future work. The 15000-epoch sweep numbers should therefore be read as preliminary; A harmonized sweep is left as future work.
 \label{sec:seed}
 
 The reciprocal PINN is trained with five random seeds on Painlev\'e~II,
@@ -358,7 +357,7 @@ checkpointing. 30000 epochs, width 64, depth 4.}
 \label{tab:seeds}
 \begin{tabular}{ccccc}
 \toprule
-Seed & Best epoch & Best val (PDE) & $E_{\mathrm{rel,far}}$ & $E_{\mathrm{rel,near}}$ \\
+Seed & Best epoch & Best val (ODE) & $E_{\mathrm{rel,far}}$ & $E_{\mathrm{rel,near}}$ \\
 \midrule
 42   & 29600 & $1.59\times 10^{-6}$ & $4.34\times 10^{-5}$ & $2.39\times 10^{-4}$ \\
 7    & 29500 & $8.27\times 10^{-7}$ & $2.35\times 10^{-5}$ & $8.92\times 10^{-5}$ \\
@@ -384,7 +383,7 @@ solution---a standard residual-error gap~\cite{Mishra2022,Urban2025b}, here quan
 \centering
 \includegraphics[width=0.9\textwidth]{figures/fig4_seed_stats.pdf}
 \caption{Distribution of $E_{\mathrm{rel,near}}$ across seeds. Left:
-prototype (3 seeds). Right: Painlev\'e~II (5 seeds).}
+prototype (10 seeds). Right: Painlev\'e~II (5 seeds).}
 \label{fig:seed-stats}
 \end{figure}
 
@@ -529,7 +528,7 @@ GPU batch inference are natural future directions.
 \section*{Data Availability}
 All scripts, trained model checkpoints, and numerical data required
 to reproduce the results in this paper are available in a public GitHub
-repository at \url{https://github.com/maryam-jalili/pinn-reciprocal-painleve}.
+repository at \url{https://github.com/mrmlili/pinn-reciprocal-painleve}.
 The repository includes all seed-level \texttt{.npz} data, M1 ablation log,
 P-II multi-seed log, hardware/software requirements, and figure-generation scripts.
 
