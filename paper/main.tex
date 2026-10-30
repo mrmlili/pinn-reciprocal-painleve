@@ -466,8 +466,7 @@ equations analyzed, the reciprocal variable produces a polynomial
 residual that remains bounded at the movable pole. This is a
 \emph{structural} property of the transformation, independent of the
 network architecture or optimizer. The empirical results confirm the
-structural claim: near-pole relative errors drop by two to three
-orders of magnitude across all tested parameter values when the
+structural claim: near-pole relative errors drop by median factors of $139\\times$--$523\\times$ across all tested parameter values when the
 reciprocal representation is used, with residuals that are
 well-conditioned throughout training.
 
@@ -514,7 +513,7 @@ regularization for second-order ODEs with movable poles. For the
 prototype $y''=y^3$ and Painlev\'e~II, we proved that the transformed
 equations are polynomial in $w$ and remain bounded at the pole,
 and we verified numerically with PINNs that the near-pole relative
-error decreases by two to three orders of magnitude relative to the
+error decreases by median factors of $139\\times$--$523\\times$ relative to the
 direct formulation. An ablation separating the change of variable from residual reweighting shows that the transformation alone and the reweighting alone both fail, and only their combination produces the reciprocal-PINN improvement. Full seed variability
 and a direct comparison with DOP853 are reported; the PINN is not
 competitive as a single-solve solver, and this is stated without
