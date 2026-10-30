@@ -44,8 +44,8 @@ persist. As an empirical verification, we train physics-informed
 neural networks (PINNs) on three representations. The reciprocal
 representation reduces the median near-pole relative error by a factor of
 $\sim1456$ for the prototype (ten seeds; 20\% failure rate) and by median factors of $139\times$--$523\times$ for Painlev\'e~II across five seeds and three values of $\alpha$, compared to the direct PINN.
-Statistical variability across five random seeds is reported
-(median $3.1\times 10^{-4}$, coefficient of variation $0.69$ (single-$\alpha$ 30k-epoch study; multi-seed sweep reports CV 1.08--1.61)).
+Seed variability is reported
+(median $3.1\times 10^{-4}$, coefficient of variation $0.69$).
 In our five-seed ablation, neither the transformation alone (with the $w^3$ factor divided out) nor the residual reweighting alone reproduces the observed improvement; in our five-seed setup, only their combination does. A direct comparison with the adaptive
 DOP853 solver shows that, for single solves, the PINN is not
 competitive in wall-clock time or accuracy; this limitation is
