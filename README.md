@@ -1,9 +1,9 @@
-﻿# Reciprocal Transform for Painlevé-Type Equations
+# Reciprocal Transform for Painlevé-Type Equations
 
 Code and data for the paper:
 
 > **Reciprocal Transform for Painlevé-Type Equations: A Mathematical Regularization with Physics-Informed Neural Network Verification**
-> Maryam Jalili, *Mathematics and Computers in Simulation* (submitted)
+> Maryam Jalili, *Communications in Nonlinear Science and Numerical Simulation (CNSNS)* (submitted)
 
 ## Abstract
 
@@ -72,7 +72,7 @@ All numerical results are in results/:
   title   = {Reciprocal Transform for {Painleve}-Type Equations:
              A Mathematical Regularization with Physics-Informed
              Neural Network Verification},
-  journal = {Mathematics and Computers in Simulation},
+  journal = {Communications in Nonlinear Science and Numerical Simulation},
   year    = {2026},
   note    = {submitted}
 }
