@@ -15,7 +15,7 @@ We propose the reciprocal transform w = 1/y as a regularization for second-order
 pip install -r requirements.txt
 python experiments/M1_ablation.py                # 2.5 h  -- Table M1
 python experiments/phase2_minimal_prototype.py   # 4 h    -- Table 1
-python experiments/p2_multiseed_full.py          # 7-12 h -- Table 2 (resume-capable)
+python experiments/p2_multiseed_full.py          # 7-12 h -- Table 3 (resume-capable)
 python experiments/generate_figures.py           # 30 s   -- figures
 ```
 
@@ -49,9 +49,10 @@ All numerical results are in results/:
 | M1_ablation.log | M1 ablation (Table M1, 5 configs, seed 42) |
 | phase2_proto_5seed.npz | Prototype, 5 seeds (Table 1 preliminary) |
 | phase2_proto_10seed_extended.npz | Prototype, 10 seeds (Table 1 final) |
-| p2_multiseed_full.npz | P-II, 5 seeds x 3 alpha x 3 reps (Table 2) |
+| p2_multiseed_full.npz | P-II, 5 seeds x 3 alpha x 3 reps (Table 3) |
 | ablation_metrics.npz | Full ablation |
 | seed_robustness.npz | Multi-seed for prototype |
+| residual_gap_scatter.pdf | Residual-error gap scatter (Spearman rho=0.00, 5 seeds) |
 
 ## Code Structure
 
