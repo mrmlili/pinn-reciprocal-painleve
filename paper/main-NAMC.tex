@@ -1,0 +1,407 @@
+\documentclass[a4paper, 10pt]{article}
+\hyphenpenalty=8000
+\textwidth=125mm
+\textheight=185mm
+
+\usepackage{graphicx}
+\usepackage{alltt}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{booktabs}
+\usepackage[hidelinks, pdftex]{hyperref}
+\usepackage[authoryear]{natbib}
+
+\pagenumbering{arabic}
+\setcounter{page}{1}
+\renewcommand{\thefootnote}{\fnsymbol{footnote}}
+\newcommand{\doi}[1]{\href{https://doi.org/#1}{\texttt{https://doi.org/#1}}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{corollary}{Corollary}
+\theoremstyle{definition}
+\newtheorem{remark}{Remark}
+
+\begin{document}
+
+\begin{center}
+Nonlinear Analysis: Modelling and Control, Vol. vv, No. nn, YYYY\\
+\copyright\ Vilnius University\\[24pt]
+\LARGE
+\textbf{Reciprocal Transform for Painlev\'e-Type Equations: An Empirical Study of PINN Performance Near Movable Singularities}\\[6pt]
+\small
+\textbf {Maryam Jalili}\\[6pt]
+Department of Mathematics, Ne.C., Islamic Azad University, Neyshabur, Iran \\ \texttt{mrmjlili@iau.ac.ir}\\[6pt]
+Received: date\quad/\quad
+Revised: date\quad/\quad
+Published online: date
+\end{center}
+
+\begin{abstract}
+We investigate the performance of physics-informed neural networks (PINNs) for second-order ODEs with movable singularities, focusing on \(y''=y^3\) and Painlev\'e II. We compare three representations: direct, rapidity, and reciprocal transform \(w=1/y\). The reciprocal representation reduces median near-pole error by up to three orders of magnitude but exhibits a 20\% seed failure rate and a weak residual--error correlation. A double-pole test (\(y''=6y^2\)) yields a fitted scaling of \(\delta^{-2.06}\). The PINN is not competitive with DOP853 for single solves. These findings highlight both potential and limitations of PINNs for singular ODEs.
+
+\vskip 2mm
+\textbf{Keywords:} movable singularities, Painlev\'e equations, physics-informed neural networks, empirical study, near-pole error. \textbf{MSC 2020:} 34M55, 34M35, 65L05, 68T07.
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+
+Second-order nonlinear ODEs of the form \(y'' = F(t, y)\) frequently develop \emph{movable singularities}: points \(t^*\), whose location depends on the initial data, at which \(|y(t)| \to \infty\). The six Painlev\'e transcendents are the canonical examples in which all movable singularities are poles~\cite{Ince1956,Gromak2002,Conte2008,Clarkson2003}; their analytic structure and asymptotics are accessible via Riemann--Hilbert methods~\cite{Deift1995,Fokas2006}. Numerical treatment near such poles is delicate: fixed-step integrators~\cite{Butcher2016,Hairer1993} lose accuracy, adaptive integrators must shrink the step to accommodate the blow-up, and neural-network approximations tend to produce residuals that grow without bound as \(t \to t^{*-}\). Recent work has begun to address singular ODEs directly, including higher-order Lane--Emden--Fowler equations~\cite{Baty2023}, interior-layer problems~\cite{Chang2024}, and singularly perturbed boundary value problems~\cite{Israr2025}. Pole-field solvers based on Pad{\'e} approximations~\cite{Fornberg2011} and Riemann--Hilbert methods~\cite{DLMF32} are classical alternatives.
+
+Physics-informed neural networks (PINNs)~\cite{Raissi2019,Karniadakis2021,Cuomo2022}, building on earlier neural-network approaches for differential equations~\cite{Lagaris1998,Sirignano2018}, minimize a composite loss consisting of the ODE residual and initial or boundary conditions. When the residual magnitudes are bounded, the training problem is better conditioned; when they diverge near a pole, the network either fails to converge or converges to a solution with large error exactly where accuracy is most needed. A known strategy is to change variables so that the residual stays bounded.~\citet{Cayuso2025} recently analyzed a rapidity substitution \(\theta = \log y\) for a class of singular problems, achieving errors of order \(2.8 \times 10^{-3}\) near the pole. Neural-network approaches have also been applied directly to Painlev\'e equations, e.g.,~\citet{Faisal2025} develop a Morlet wavelet network for Painlev\'e~II.
+
+In this work we propose an alternative transformation---the \emph{reciprocal} variable \(w = 1/y\)---and analyze it from first principles. We note that \(w = 1/y\) and \(\theta = \log y\) are related by a smooth invertible transformation on \(y>0\); the reciprocal formulation is not a wholly different conceptual approach, but a different representation within the same family of dependent-variable transformations. What distinguishes the two is structural: the reciprocal residual is polynomial in \(w\) (see Section 1.1), whereas the rapidity residual retains exponentially growing source terms. This structural difference is the contribution of the present work. The key observation is that multiplying the residual equation by \(w^3\) eliminates all denominators, yielding a polynomial relation in \(w, w', w''\). For both \(y''=y^3\) and Painlev\'e~II, the resulting right-hand side is a \emph{constant} at \(w=0\), so the polynomial residual remains bounded at the pole. The coefficient of \(w''\) nevertheless vanishes at \(w=0\), making the ODE degenerate there; it is the boundedness of the residual, not regularity of the ODE, that the transformation provides. We then use PINNs to verify numerically that this regularization translates into bounded training residuals and reduced near-pole error.
+
+The reciprocal variable \(w = 1/y\) and its use for numerical treatment of Painlev\'e poles are not new; Abramov and Yukhno~\cite{Abramov2012} introduced \(u=1/y\) as an auxiliary variable to continue solutions of Painlev\'e I and II through movable poles. Our contribution is the empirical characterization of how the reciprocal representation affects PINN training near singularities, including both its successes (large median improvements) and its failure modes (seed-dependent breakdowns, residual--error gap).
+
+\paragraph{Contributions.}
+Our contributions are:
+\begin{enumerate}
+\item An empirical comparison of three representations (direct, rapidity, reciprocal) for \(y''=y^3\) and Painlev\'e~II, with a focus on near-pole accuracy and seed-level variability.
+\item An ablation separating the change of variable from residual reweighting, showing that, in our five-seed setup, only their combination reproduces the reported improvement.
+\item A full statistical report of seed variability and a direct comparison with the DOP853 adaptive solver.
+\end{enumerate}
+
+\paragraph{Scope.}
+We restrict attention to the prototype \(y''=y^3\) and Painlev\'e~II. Extension to Painlev\'e~III--VI is left for future work; the transform is not guaranteed to regularize those equations without additional structure.
+
+\subsection{The Reciprocal Transform and Exact Pole Location}
+
+For the prototype equation \(y''=y^3\) with \(y(0)=1, y'(0)=0\), the first integral is \((y')^2 = \frac{1}{2}(y^4 - 1)\). The exact blow-up time is known in closed form:
+\begin{equation}
+t^* = \frac{\Gamma(1/4)^2}{4\sqrt{\pi}} \approx 1.8540746773013719.
+\end{equation}
+The reciprocal variable \(w = 1/y\) satisfies \(2(w')^2 - ww'' = 1\), with \(w(0)=1\) and \(w'(0)=0\). Note that while \(w'(0)=0\), we have \(w''(0)=-1\), meaning the exact solution is strictly decreasing on the open interval \((0, t^*)\).
+
+\subsection{Note on the Absence of a Theoretical Error Bound}
+
+An earlier version of this work attempted to establish a residual-to-error bound of the form \(O(\epsilon \delta^{-2})\). Upon independent verification, we found that the constant in this bound vanishes for the prototype \(y''=y^3\), rendering the bound vacuous for the principal benchmark. Rather than present an inapplicable theorem, we have removed it entirely. The empirical results in Section 3 should therefore be read as descriptive findings, not as consequences of a theoretical guarantee. We consider the development of a valid error bound for singular ODEs to be an open problem for future work.
+
+\section{Numerical Verification with PINNs}
+\label{sec:numerics}
+
+\subsection{Network architecture and training}
+
+\noindent\textbf{Computational environment.} All experiments were run on a Windows~10 workstation with an Intel Core~i7 (8 cores, 8~GB RAM), Python~3.14, PyTorch~2.13 (CPU only), NumPy~2.5.1, SciPy~1.18, and Matplotlib~3.11. Training one seed takes approximately 15 minutes; DOP853 reference solutions take 18--46~ms per run.
+
+All experiments use a feedforward network with three hidden layers of width 64 and $\tanh$ activations. Collocation points are drawn from a mixture of uniform and cubically clustered grids on $[0, 0.95\,t^*]$, with 2000 points total. Training minimizes $\mathcal{L} = \|R\|^2 + \lambda_{\mathrm{ic}}\,\mathcal{L}_{\mathrm{ic}}$ with $\lambda_{\mathrm{ic}} = 10$, using Adam with learning rate $10^{-3}$ and $30{,}000$ epochs. A held-out set of 300 ODE residual points is used for best-model checkpointing (Section~\ref{sec:seed}). Reference solutions use \texttt{scipy.integrate.solve\_ivp} with the DOP853 method and $\mathrm{rtol}=\mathrm{atol}=10^{-12}$. The blow-up time $t^*$ is located by DOP853 event detection: we integrate until the first $t>0$ at which $y(t) - 10^{6} = 0$, with \texttt{terminal=True} and \texttt{direction=+1}. Relative error at each time is defined as $E_{\mathrm{rel}}(t) = |y_\phi(t) - y_{\mathrm{ref}}(t)| / |y_{\mathrm{ref}}(t)|$, where $y_\phi$ is the PINN prediction and $y_{\mathrm{ref}}$ is the DOP853 reference. Errors are reported separately for far ($t < 0.5\,t^*$) and near ($t \ge 0.5\,t^*$) regions, with $E_{\mathrm{rel,far}}$ and $E_{\mathrm{rel,near}}$ denoting $\max_t E_{\mathrm{rel}}(t)$ over the corresponding subinterval. The initial conditions are $y(0)=1$, $y'(0)=0$ for both the prototype and Painlev\'e~II.
+
+\subsection{Prototype ablation}
+\label{sec:proto-ablation}
+
+Table~\ref{tab:proto} compares three representations for $y''=y^3$. Errors are reported separately far from the pole ($t < 0.5\,t^*$) and near the pole ($t \ge 0.5\,t^*$). The reciprocal representation reduces $E_{\mathrm{rel,near}}$ by a factor of $1456\times$ relative to the direct PINN.
+
+\begin{table}[t]
+\centering
+\caption{Prototype $y''=y^3$: seed statistics (median [IQR]). Direct and rapidity-log use five seeds; reciprocal is extended to ten seeds to characterize the 20\% failure rate. $t^*\approx 1.854$; success threshold $E_{\mathrm{rel,near}}<10^{-2}$. The high CV for the reciprocal row reflects two outliers; excluding them, CV $\approx 1.3$.}
+\label{tab:proto}
+\begin{tabular}{lccccc}
+\toprule
+Representation & $n$ & $E_{\mathrm{rel,near}}$ median [IQR] & CV & Success & Improvement \\
+\midrule
+Direct         & 5 & $7.53e-1$ $[7.19e-1, 7.58e-1]$ & $0.05$ & 0/5 & $1\times$ \\
+Rapidity-log   & 5 & $5.72e-1$ $[5.62e-1, 6.27e-1]$ & $0.14$ & 0/5 & $1.3\times$ \\
+Reciprocal     & 10 & $\mathbf{5.17e-4}$ $[2.82e-4, 5.64e-3]$ & $\mathbf{2.01}$ & $\mathbf{8/10}$ & $\mathbf{1456\times}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{Seed sensitivity.} To characterize the distribution of reciprocal-PINN outcomes, we extended the C4 prototype to ten seeds. Across these ten runs, eight converge to $E_{\mathrm{rel,near}} < 10^{-2}$ with median $5.17\times 10^{-4}$ (IQR $[2.82\times 10^{-4}, 5.64\times 10^{-3}]$), while two converge to suboptimal minima ($4.60\times 10^{-2}$ and $8.32\times 10^{-2}$). The failure rate of $2/10$ (20\%) is consistent with the one-in-five observed in the original five-seed set, indicating a bimodal or heavy-tailed distribution over initializations rather than a single stochastic fluke. One of the failing seeds (seed 999) was re-run three times under identical conditions, yielding the identical value $4.603\times 10^{-2}$ each time, confirming that the variability is deterministic in the seed rather than stochastic. The median improvement over the direct PINN (five-seed median $7.53\times 10^{-1}$) is approximately $1456\times$. A full characterization of this distribution, and of why some initializations converge to suboptimal minima, is left for future work.
+
+\subsection{Transform vs.\ residual reweighting}
+\label{sec:M1}
+
+The reciprocal equation multiplies the original residual by $w^3$, so a natural confound is whether the observed improvement stems from the change of variable, from the residual reweighting, or from both. Table~\ref{tab:M1} isolates the two effects by training five configurations under identical conditions (five seeds, $30{,}000$ epochs).
+
+\begin{table}[t]
+\centering
+\caption{Ablation separating the change of variable from residual reweighting on the prototype $y''=y^3$ (five seeds, $30{,}000$ epochs). Values are median [IQR] over five seeds; CV is the coefficient of variation. The transformation alone ($D$) and the reweighting alone ($B$) both fail; only the combination ($C$) produces the reciprocal-PINN result. The five-seed pattern is stable across initializations.}
+\label{tab:M1}
+\begin{tabular}{clcccc}
+\toprule
+Config & Output / Loss & $E_{\mathrm{rel,near}}$ median [IQR] & CV & Verdict \\
+\midrule
+A & $y$ / $R_y$ & $7.53e-1$ $[7.19e-1, 7.58e-1]$ & $0.05$ & baseline \\
+B & $y$ / $w^3 R_y$ & $9.56e-1$ $[9.51e-1, 9.59e-1]$ & $0.35$ & worse than A \\
+C & $w$ / $R_w = w^3 R_y$ & $\mathbf{2.92e-4}$ $[2.65e-4, 1.72e-3]$ & $2.10$ & best \\
+D & $w$ / $R_w/w^3 = R_y$ & $8.21e-1$ $[7.14e-1, 9.23e-1]$ & $0.16$ & worse than A \\
+E & $y$ / $R_y/(1+|y|^3)$ & $2.91e-1$ $[2.68e-1, 2.95e-1]$ & $0.17$ & partial \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The five-seed ablation suggests that the observed accuracy depends on both the output representation and the residual weighting. The results do not, however, establish that these are the only mechanisms affecting convergence.
+
+\emph{Factor~1: representability.} The reciprocal variable $w(t)$ is analytic through $t^*$, whereas $y(t)$ has a simple pole there. A tanh-network of fixed width can efficiently approximate the analytic $w(t)$ through the pole, whereas the singular $y(t)$ requires an increasingly high-frequency approximation near $t^*$. The Jacobian of the output transformation, $dy/dw = -1/w^2$, amplifies the network's error in $y$ by a factor that diverges at the pole, so the effective capacity of a $y$-network is severely reduced near $t^*$. This factor distinguishes configurations~A,~B,~E (all $y$-output) from~C,~D (all $w$-output).
+
+\emph{Factor~2: loss conditioning.} The polynomial residual $R_w = 2(w')^2 - ww'' - 1$ is bounded: at a simple pole $w \to 0$ linearly, $w' \to -1/\sqrt{2}$, and $R_w \to 0$. The original residual, by contrast, is $R_y = R_w/w^3$, which grows as $(t^*-t)^{-3}$ near $t^*$, producing loss magnitudes of order $10^3$--$10^4$ for the direct formulation. This factor distinguishes configurations~A,~D (unweighted $R_y$-type losses) from~B,~C,~E (weighted losses).
+
+In our five-seed ablation, the specific w$^3$-reweighting alone (B) and the transformation alone (D) both fail. Configuration~B has a bounded loss (Factor~2 satisfied) but a $y$-output (Factor~1 violated) and yields a median $E_{\mathrm{rel,near}} = 9.56\times 10^{-1}$. Configuration~D has a $w$-output (Factor~1 satisfied) but divides by $w^3$, restoring the $(t^*-t)^{-3}$ growth of the loss (Factor~2 violated) and yields a median of $8.21\times 10^{-1}$. Configuration~E has a bounded loss (Factor~2 satisfied) but a $y$-output (Factor~1 violated) and only partially succeeds, with a median of $2.91\times 10^{-1}$. Only configuration~C satisfies both factors and reaches a median of $2.92\times 10^{-4}$ (IQR $[2.65\times 10^{-4}, 1.72\times 10^{-3}]$; one of five seeds, seed~999, reproduces the 20\% failure rate observed in Section~\ref{sec:proto-ablation}). Configurations~B and~E share the same qualitative factors (y-output, weighted loss) but use different normalization forms: B employs $1/|y|^3$, whereas E uses the bounded normalization $1/(1+|y|^3)$. This gap suggests that the precise form of the weighting also matters, a point left for future work. The five-seed extension is consistent across seeds.
+
+Figure~\ref{fig:solutions} shows representative solution profiles; Figure~\ref{fig:error-curves} shows the pointwise absolute error on a logarithmic scale.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/fig1_solutions.pdf}
+\caption{Reference solutions for $y''=y^3$ (left) and Painlev\'e~II $\alpha=1$ (right) on $[0, 0.95\,t^*]$. Both exhibit a movable pole shortly beyond the plotted interval.}
+\label{fig:solutions}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/fig2_error_curves.pdf}
+\caption{Pointwise absolute error $|y_\phi - y_{\mathrm{ref}}|$ for the three representations. The vertical dotted line marks $0.5\,t^*$.}
+\label{fig:error-curves}
+\end{figure}
+
+\subsection{Verification with a Double-Pole Singularity}
+To demonstrate that the error bound is not restricted to simple poles, we apply the same PINN methodology to the equation \(y'' = 6y^2\) with \(y(0)=1, y'(0)=2\). This equation admits the exact solution \(y(t) = 1/(1-t)^2\), which has a double pole at \(t^*=1\). The reciprocal variable \(w=1/y\) satisfies \(2(w')^2 - ww'' = 6w\), which remains bounded at \(w=0\). Our PINN experiments yield a fitted error scaling of \(\delta^{-2.06}\), in agreement with the theoretical prediction. The fitted slope of \(-2.06\) for the double pole is consistent with a \(\delta^{-2}\) scaling, but we emphasize that this is an empirical observation, not a consequence of any theorem. The first integral for this equation is \((w')^2 = 4w\), which differs from the prototype's form; a unified theoretical treatment of both cases is left for future work.
+
+\subsection{Painlev\'e II and parameter sweep}
+\label{sec:PII-sweep}
+
+Table~\ref{tab:alpha} and Figure~\ref{fig:alpha-sweep} report the near-pole error across $\alpha \in \{0,1,2\}$. The reciprocal representation consistently outperforms the other two by median factors of $139\times$ to $523\times$ across $\alpha$ (Table~\ref{tab:alpha}).
+
+\begin{table}[t]
+\centering
+\caption{Painlev\'e II: five-seed statistics (median [IQR]) for three representations and $\alpha\in\{0,1,2\}$. The reciprocal PINN yields median improvements of $139\times$--$523\times$ across $\alpha$, with substantial seed-to-seed variability (CV 1.08--1.61). Overall success rate (E$_{\mathrm{rel,near}}<10^{-2}$): 11/15 = 73\%. The single-seed $904\times$ previously reported for $\alpha=1$ was not reproducible and is superseded.}
+\label{tab:alpha}
+\begin{tabular}{cccccc}
+\toprule
+$\alpha$ & Direct & Rapidity & Reciprocal & CV (D2) & Ratio \\
+\midrule
+0.0 & $7.49e-1$ & $6.19e-1$ & $\mathbf{1.43e-3}$ $[4.38e-4, 5.42e-3]$ & $1.61$ & $523\times$ \\
+1.0 & $7.65e-1$ & $6.46e-1$ & $\mathbf{5.51e-3}$ $[3.29e-4, 5.90e-3]$ & $1.08$ & $139\times$ \\
+2.0 & $7.46e-1$ & $5.65e-1$ & $\mathbf{3.36e-3}$ $[2.01e-3, 1.58e-2]$ & $1.33$ & $222\times$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig3_alpha_sweep.pdf}
+\caption{Near-pole relative error across $\alpha\in\{0,1,2\}$ for the direct, rapidity, and reciprocal representations. Each bar represents the median over five random seeds; error bars indicate the interquartile range. Note the logarithmic scale.}
+\label{fig:alpha-sweep}
+\end{figure}
+
+\subsection{Seed variability}
+\label{sec:seed}
+
+\emph{Note on epoch count and reporting protocol.} All PINN experiments reported in this paper use $30{,}000$ training epochs with best-model checkpointing on 300 held-out ODE-residual points. The prototype statistics in Table~\ref{tab:proto} and the Painlev\'e~II multi-seed sweep in Table~\ref{tab:alpha} use five seeds per representation (ten for the extended reciprocal prototype); the separate five-seed study at $\alpha=1$ in Table~\ref{tab:seeds} reports per-seed best-epoch values for comparison. The earlier single-seed $904\times$ figure at $\alpha=1$ ($15{,}000$ epochs) was not reproducible under the harmonized $30{,}000$-epoch protocol and is therefore superseded by the multi-seed medians in Table~\ref{tab:alpha}.
+
+The reciprocal PINN is trained with five random seeds on Painlev\'e~II, $\alpha=1$, using best-model checkpointing on 300 held-out ODE residual points. Table~\ref{tab:seeds} and Figure~\ref{fig:seed-stats} report the results.
+
+\begin{table}[t]
+\centering
+\caption{Painlev\'e II, $\alpha=1$: five-seed statistics with best-model checkpointing. 30000 epochs, width 64, depth 4.}
+\label{tab:seeds}
+\begin{tabular}{ccccc}
+\toprule
+Seed & Best epoch & Best val (ODE) & $E_{\mathrm{rel,far}}$ & $E_{\mathrm{rel,near}}$ \\
+\midrule
+42   & 29600 & $1.59\times 10^{-6}$ & $4.34\times 10^{-5}$ & $2.39\times 10^{-4}$ \\
+7    & 29500 & $8.27\times 10^{-7}$ & $2.35\times 10^{-5}$ & $8.92\times 10^{-5}$ \\
+123  & 28900 & $1.55\times 10^{-6}$ & $2.72\times 10^{-5}$ & $3.14\times 10^{-4}$ \\
+2024 & 29700 & $1.37\times 10^{-6}$ & $3.04\times 10^{-5}$ & $9.34\times 10^{-4}$ \\
+999  & 28600 & $1.49\times 10^{-6}$ & $3.52\times 10^{-5}$ & $6.02\times 10^{-4}$ \\
+\midrule
+\multicolumn{3}{c}{mean} & & $4.36\times 10^{-4}$ \\
+\multicolumn{3}{c}{median} & & $3.14\times 10^{-4}$ \\
+\multicolumn{3}{c}{CV (population)} & & $0.688$ \\
+\multicolumn{3}{c}{CV (sample)} & & $0.770$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A key observation is that the coefficient of variation across seeds is $0.21$ for the held-out \emph{residual} but $0.69$ for the true \emph{error}. That is, the residual behaves as a well-behaved training objective, but it does not fully predict the accuracy of the resulting solution---a standard residual-error gap~\cite{Mishra2022,Urban2025b}, here quantified at the movable singularity (see also~\cite{Urban2025b}). The gap is particularly striking in our setting because the residual is itself the criterion used for best-model checkpointing. Across the five seeds, the Spearman rank correlation between the held-out validation residual and the true near-pole error is $\rho = 0.00$ ($p = 1.00$), with no monotonic relationship between the two. Seed~7 achieves both the smallest validation residual ($8.27\times 10^{-7}$) and the smallest near-pole error ($8.92\times 10^{-5}$), whereas Seed~2024 has a small residual ($1.37\times 10^{-6}$) but the largest near-pole error ($9.34\times 10^{-4}$). This single-point contrast suggests the residual--error gap but does not statistically establish it.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\textwidth]{figures/fig4_seed_stats.pdf}
+\caption{Distribution of $E_{\mathrm{rel,near}}$ across seeds. Left: prototype (10 seeds). Right: Painlev\'e~II (5 seeds).}
+\label{fig:seed-stats}
+\end{figure}
+
+\section{Baseline Comparison and Generalization}
+\label{sec:baseline}
+
+\subsection{Wall-clock time and accuracy}
+
+Table~\ref{tab:dop853} reports the performance of the DOP853 adaptive solver on Painlev\'e~II, $\alpha=1$. Training time for the PINN is ${\sim}15$ minutes on CPU; inference on 2000 evaluation points takes $1.7$~ms. The PINN's near-pole error of $2.4\times 10^{-4}$ (seed 42) is roughly six orders of magnitude above DOP853's tolerance setting ($\mathrm{rtol}=\mathrm{atol}=10^{-10}$; the actual measured global error may differ from the tolerance). Figure~\ref{fig:pareto} visualizes the cost-accuracy trade-off on a log-log scale.
+
+\begin{table}[t]
+\centering
+\caption{Comparison of DOP853 (adaptive) and the reciprocal PINN for Painlev\'e~II, $\alpha=1$ (DOP853 rows report tolerance settings, not measured global error). ``Reaches $t^*$?'' means reaching the finite event $y=10^6$ used to define $t^*$ (Section~\ref{sec:numerics}); 100\% means the solver's internal event detection reached this threshold, 99\% means the trained PINN was evaluated up to $0.99\,t^*$.}
+\label{tab:dop853}
+\begin{tabular}{lcccc}
+\toprule
+Method & Wall time & Accuracy & Reaches $t^*$? & Training required? \\
+\midrule
+DOP853 ($\mathrm{rtol}=10^{-6}$)  & 18.2 ms  & $\sim 10^{-6}$ & $100\%$ & no \\
+DOP853 ($\mathrm{rtol}=10^{-10}$) & 34.8 ms  & $\sim 10^{-10}$ & $100\%$ & no \\
+DOP853 ($\mathrm{rtol}=10^{-12}$) & 46.2 ms  & $\sim 10^{-12}$ & $100\%$ & no \\
+Reciprocal PINN                   & 1.7 ms\textsuperscript{*} & $2.4\times 10^{-4}$ & $99\%$ & $15$ min \\
+\bottomrule
+\multicolumn{5}{l}{\small\textsuperscript{*}inference only; excludes training.}
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/fig7_vs_dop853.pdf}
+\caption{Cost-accuracy trade-off between DOP853 and the reciprocal PINN.}
+\label{fig:pareto}
+\end{figure}
+
+\subsection{Generalization across $\alpha$}
+
+The PINN trained at $\alpha=1$ is evaluated at $\alpha=0.9$ and $\alpha=1.1$ without retraining. Table~\ref{tab:gen} and Figure~\ref{fig:gen} show that generalization fails: the near-pole error rises to $1.77\times 10^{-1}$ and $1.29\times 10^{-1}$, respectively, more than two orders of magnitude above the in-distribution error.
+
+\begin{table}[t]
+\centering
+\caption{Generalization of a PINN trained at $\alpha=1$ and evaluated at nearby parameter values without retraining.}
+\label{tab:gen}
+\begin{tabular}{cccc}
+\toprule
+Test $\alpha$ & $t^*$ & $E_{\mathrm{rel,near}}$ & Status \\
+\midrule
+0.90 & 1.1665 & $1.77\times 10^{-1}$ & degraded \\
+1.00 & 1.1577 & $2.39\times 10^{-4}$ & baseline \\
+1.10 & 1.1492 & $1.29\times 10^{-1}$ & degraded \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.7\textwidth]{figures/fig6_generalization.pdf}
+\caption{Generalization failure of a PINN trained at $\alpha=1$.}
+\label{fig:gen}
+\end{figure}
+
+\section{Discussion}
+\label{sec:discussion}
+
+\paragraph{Contributions of the reciprocal formulation.}
+The reciprocal representation produces a polynomial residual that remains bounded at the movable pole in our experiments. This is an observed property of the transformed residual. Its practical benefit, however, still depends on the network's approximation capacity. The empirical results are consistent with the structural claim: near-pole relative errors drop by median factors of $139\times$--$523\times$ across all tested parameter values when the reciprocal representation is used, with residuals that we observe to remain bounded in our experiments.
+
+\paragraph{Limitations of the present implementation.}
+The present results do not support the claim that PINNs with the reciprocal transform outperform mature adaptive ODE solvers. For single solves, the one-time training cost of $\sim$15~minutes makes the reciprocal PINN non-competitive with DOP853 in total wall-clock time. The adaptive solver reaches the prescribed blow-up threshold exactly and achieves six orders of magnitude higher accuracy, at a per-solve cost of 18--46~ms (Table~\ref{tab:dop853}). The PINN's faster inference (1.7~ms) is therefore relevant only for repeated evaluation of a pre-trained model, not for single-solve scenarios. The reciprocal PINN is also sensitive to the random seed, with a coefficient of variation of $0.69$ across five seeds, and it fails to generalize to nearby $\alpha$ without retraining. These are limitations of the present implementation, and they are the reason we frame the reciprocal transform as the primary contribution and the PINN as a verification instrument rather than as a competitive solver.
+
+\paragraph{Residual-error gap.}
+The gap between the seed variability of the ODE residual (CV $= 0.21$) and the true error (CV $= 0.69$) indicates that a low residual does not by itself guarantee a low solution error. This is a known phenomenon in the PINN literature~\cite{Krishnapriyan2021,FP64NeurIPS2025}; here we quantify it in the setting of a movable singularity. Recent work~\cite{FP64NeurIPS2025} suggests that a substantial fraction of PINN failure modes may be precision-induced stalls rather than inescapable local minima, which is consistent with the seed-dependent suboptimal convergence observed here. We have not tested whether larger networks, LBFGS polishing, or architectural modifications close the gap.
+
+\paragraph{Comparison with rapidity substitution.}
+The rapidity substitution $\theta = \log y$ of~\citet{Cayuso2025} achieves a comparable order of accuracy on their test problems but retains exponentially growing source terms. Our comparison (Table~\ref{tab:proto}) indicates that the reciprocal formulation yields a lower near-pole error in our specific experimental setup. However, this comparison should be interpreted with caution: the rapidity substitution was originally designed for a different class of singular problems, and we have not optimized its hyperparameters to the same extent as the reciprocal formulation. A definitive comparison under identical protocols is left for future work.
+
+\paragraph{Additional limitations.} A few limitations deserve explicit mention. The prototype $y''=y^3$ has a closed-form Jacobi-elliptic solution ($w = \mathrm{cn}(t \mid 1/2)$, $t^* = \Gamma(1/4)^2/(4\sqrt{\pi}) \approx 1.854$), so it isolates the mechanism rather than stress-testing it. There is also no convergence theorem: boundedness of the polynomial residual does not by itself imply optimization convergence or solution accuracy. We have not benchmarked against adaptive-collocation~\cite{Wu2023Adaptive,ARGUS2026}, causal-training~\cite{Wang2024Causal,GaussianCausal2026}, or PINN-pathology~\cite{Krishnapriyan2021,FP64NeurIPS2025} methods, nor against Pad\'e-based pole-field solvers~\cite{Fornberg2011}; the comparison here is limited to the direct and rapidity formulations. Finally, boundedness of the transformed polynomial residual is not the same as well-posedness of the degenerate second-order ODE at $w=0$, and since training stops at $0.95\,t^*$, that point is never directly evaluated.
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have proposed and analyzed the reciprocal transform $w=1/y$ as a regularization for second-order ODEs with movable poles. For the prototype $y''=y^3$ and Painlev\'e~II, we observed that the transformed equations are polynomial in $w$ and remain bounded at the pole, and we demonstrated numerically with PINNs that the near-pole relative error decreases by median factors of $139\times$--$523\times$ relative to the direct formulation. An ablation separating the change of variable from residual reweighting shows that the transformation alone and the reweighting alone both fail, and only their combination reproduces the reported reciprocal-PINN improvement. Full seed variability and a direct comparison with DOP853 are reported; the PINN is not competitive as a single-solve solver, and this is stated explicitly. Extension to Painlev\'e~III--VI, larger networks, and GPU batch inference are obvious engineering next steps.
+
+\paragraph{Author Contributions.} Maryam Jalili contributed to methodology, formal analysis, software, validation, writing – original draft preparation, and writing – review and editing. The author has read and approved the published version of the manuscript.
+
+\paragraph{Conflicts of Interest.} The author declares no conflicts of interest.
+
+\paragraph{Declaration of generative AI and AI-assisted technologies in the manuscript preparation process.}
+During the preparation of this work the author used DeepSeek and ChatGPT to improve the language and readability of this manuscript. All AI-generated suggestions were reviewed and edited by the author, who takes full responsibility for the final content.
+
+\paragraph{Data Availability.}
+All scripts, trained model checkpoints, and numerical data required to reproduce the results in this paper are available in a public GitHub repository at \url{https://github.com/mrmlili/pinn-reciprocal-painleve}. The repository is archived on Zenodo (DOI: \mbox{\href{https://doi.org/10.5281/zenodo.23814431}{10.5281/zenodo.23814431}}; release v1.0.0: \mbox{\href{https://doi.org/10.5281/zenodo.23814432}{10.5281/zenodo.23814432}}). The repository includes all seed-level \texttt{.npz} data, M1 ablation log, P-II multi-seed log, hardware/software requirements, and figure-generation scripts.
+
+\begin{thebibliography}{99}
+
+\bibitem[Abramov \& Yukhno(2012)]{Abramov2012}
+Abramov, A. A., \& Yukhno, L. F. (2012). Numerical solution of the Cauchy problem for the Painlev\'e I and II equations. \emph{Computational Mathematics and Mathematical Physics}, \emph{52}(3), 315--320. https://doi.org/10.1134/S0965542512030025
+
+\bibitem[Baty(2023)]{Baty2023}
+Baty, H. (2023). \emph{Solving higher-order {Lane--Emden--Fowler} type equations using physics-informed neural networks: Benchmark tests comparing soft and hard constraints} (arXiv:2307.07302). arXiv. https://arxiv.org/abs/2307.07302
+
+\bibitem[Butcher(2016)]{Butcher2016}
+Butcher, J. C. (2016). \emph{Numerical methods for ordinary differential equations} (3rd ed.). Wiley.
+
+\bibitem[Cayuso et al.(2025)]{Cayuso2025}
+Cayuso, J., Herrero-Valea, M., \& Barausse, E. (2025). Deep learning solutions to singular ordinary differential equations: From special functions to spherical accretion. \emph{Physical Review D}, \emph{111}, 064082. https://doi.org/10.1103/PhysRevD.111.064082
+
+\bibitem[Chang et al.(2024)]{Chang2024}
+Chang, T.-Y., Gie, G.-M., Hong, Y., \& Jung, C.-Y. (2024). \emph{Singular layer {PINN} methods for {Burgers}' equation} (arXiv:2410.09723). arXiv. https://arxiv.org/abs/2410.09723
+
+\bibitem[Chen et al.(2025)]{FP64NeurIPS2025}
+Chen, C., Li, X., Zhang, Y., et al. (2025). {FP64} is all you need: Rethinking failure modes in physics-informed neural networks. In \emph{Advances in Neural Information Processing Systems} (Vol. 38).
+
+\bibitem[Chen et al.(2026)]{GaussianCausal2026}
+Chen, L., Wang, Y., Zhang, M., et al. (2026). Gaussian causal physics-informed neural networks. In \emph{Proceedings of the 2025 3rd International Conference on Mathematics and Machine Learning (ICMML '25)}. https://doi.org/10.1145/3783779.3783812
+
+\bibitem[Clarkson(2003)]{Clarkson2003}
+Clarkson, P. A. (2003). {Painlev\'e} equations---Nonlinear special functions. \emph{Journal of Computational and Applied Mathematics}, \emph{153}(1--2), 127--140.
+
+\bibitem[Conte \& Musette(2008)]{Conte2008}
+Conte, R., \& Musette, M. (2008). \emph{The {Painlev\'e} handbook}. Springer.
+
+\bibitem[Cuomo et al.(2022)]{Cuomo2022}
+Cuomo, S., Schiano Di Cola, V., Giampaolo, F., Rozza, G., Raissi, M., \& Piccialli, F. (2022). Scientific machine learning through physics-informed neural networks: Where we are and what's next. \emph{Journal of Scientific Computing}, \emph{92}, 88. https://doi.org/10.1007/s10915-022-01939-z
+
+\bibitem[Deift \& Zhou(1995)]{Deift1995}
+Deift, P., \& Zhou, X. (1995). Asymptotics for the {Painlev\'e II} equation. \emph{Communications on Pure and Applied Mathematics}, \emph{48}(3), 277--337.
+
+\bibitem[Faisal et al.(2025)]{Faisal2025}
+Faisal, S., Sabir, Z., Khan, S. U., Aamir, M., \& Cyran, K. A. (2025). A novel heuristic {Morlet} wavelet neural network design for the {Painlev\'e} equation-{II} arising in nonlinear optics. \emph{Scientific Reports}, \emph{15}, 24713. https://doi.org/10.1038/s41598-025-10096-w
+
+\bibitem[Fokas et al.(2006)]{Fokas2006}
+Fokas, A. S., Its, A. R., Kapaev, A. A., \& Novokshenov, V. Yu. (2006). \emph{{Painlev\'e} transcendents: The {Riemann--Hilbert} approach}. American Mathematical Society.
+
+\bibitem[Fornberg \& Weideman(2011)]{Fornberg2011}
+Fornberg, B., \& Weideman, J. A. C. (2011). A numerical methodology for the {Painlev\'e} equations. \emph{Journal of Computational Physics}, \emph{230}(15), 5957--5973. https://doi.org/10.1016/j.jcp.2011.04.007
+
+\bibitem[Gromak et al.(2002)]{Gromak2002}
+Gromak, V. I., Laine, I., \& Shimomura, S. (2002). \emph{{Painlev\'e} differential equations in the complex plane}. de Gruyter.
+
+\bibitem[Hairer et al.(1993)]{Hairer1993}
+Hairer, E., Norsett, S. P., \& Wanner, G. (1993). \emph{Solving ordinary differential equations {I}: Nonstiff problems} (2nd ed.). Springer.
+
+\bibitem[Ince(1956)]{Ince1956}
+Ince, E. L. (1956). \emph{Ordinary differential equations}. Dover.
+
+\bibitem[Israr \& Khan(2025)]{Israr2025}
+Israr, M. Z., \& Khan, I. (2025). Causal physics-informed neural networks for singular and singularly perturbed boundary value problems in chemical systems. \emph{Global Integrated Mathematics}, \emph{1}(1), 13--27.
+
+\bibitem[Karniadakis et al.(2021)]{Karniadakis2021}
+Karniadakis, G. E., Kevrekidis, I. G., Lu, L., Perdikaris, P., Wang, S., \& Yang, L. (2021). Physics-informed machine learning. \emph{Nature Reviews Physics}, \emph{3}, 422--440.
+
+\bibitem[Krishnapriyan et al.(2021)]{Krishnapriyan2021}
+Krishnapriyan, A., Gholami, A., Zhe, S., Kirby, R., \& Mahoney, M. W. (2021). Characterizing possible failure modes in physics-informed neural networks. In \emph{Advances in Neural Information Processing Systems} (Vol. 34, pp. 26548--26560).
+
+\bibitem[Lagaris et al.(1998)]{Lagaris1998}
+Lagaris, I. E., Likas, A., \& Fotiadis, D. I. (1998). Artificial neural networks for solving ordinary and partial differential equations. \emph{IEEE Transactions on Neural Networks}, \emph{9}(5), 987--1000.
+
+\bibitem[Luo et al.(2026)]{ARGUS2026}
+Luo, F., Yang, Y., Chen, Z., Zheng, J., \& Qin, T. (2026). Adaptive residual-gradient sampling {PINNs} for unsteady wake reconstruction around offshore cylinder arrays. \emph{Ocean Engineering}. https://doi.org/10.1016/j.oceaneng.2026.128317
+
+\bibitem[Mishra \& Molinaro(2022)]{Mishra2022}
+Mishra, S., \& Molinaro, R. (2022). Estimates on the generalization error of physics-informed neural networks for approximating {PDEs}. \emph{IMA Journal of Numerical Analysis}, \emph{43}(1), 1--43.
+
+\bibitem[Olver et al.(2025)]{DLMF32}
+Olver, F. W. J., Olde Daalhuis, A. B., Lozier, D. W., Schneider, B. I., Boisvert, R. F., Clark, C. W., Miller, B. R., Saunders, B. V., Cohl, H. S., \& McClain, M. A. (Eds.). (2025). \emph{{NIST} Digital Library of Mathematical Functions} (Release 1.2.4), \S 32.17. https://dlmf.nist.gov/32.17
+
+\bibitem[Raissi et al.(2019)]{Raissi2019}
+Raissi, M., Perdikaris, P., \& Karniadakis, G. E. (2019). Physics-informed neural networks: A deep learning framework for solving forward and inverse problems involving nonlinear partial differential equations. \emph{Journal of Computational Physics}, \emph{378}, 686--707.
+
+\bibitem[Sirignano \& Spiliopoulos(2018)]{Sirignano2018}
+Sirignano, J., \& Spiliopoulos, K. (2018). {DGM}: A deep learning algorithm for solving partial differential equations. \emph{Journal of Computational Physics}, \emph{375}, 1339--1364.
+
+\bibitem[Urb{\'a}n et al.(2025)]{Urban2025b}
+Urb\'an, J. F., Stefanou, P., \& Pons, J. A. (2025). Unveiling the optimization process of physics informed neural networks: How accurate and competitive can {PINNs} be? \emph{Journal of Computational Physics}, \emph{523}, 113656. https://doi.org/10.1016/j.jcp.2024.113656
+
+\bibitem[Wang et al.(2024)]{Wang2024Causal}
+Wang, S., Sankaran, S., \& Perdikaris, P. (2024). Respecting causality is all you need for training physics-informed neural networks. \emph{Computer Methods in Applied Mechanics and Engineering}, \emph{421}, 116813. https://doi.org/10.1016/j.cma.2024.116813
+
+\bibitem[Wu et al.(2023)]{Wu2023Adaptive}
+Wu, C., Zhu, M., Tan, Q., Kartha, Y., \& Lu, L. (2023). A comprehensive study of non-adaptive and residual-based adaptive sampling for physics-informed neural networks. \emph{Computer Methods in Applied Mechanics and Engineering}, \emph{403}, 115671. https://doi.org/10.1016/j.cma.2022.115671
+
+\end{thebibliography}
+
+\end{document}

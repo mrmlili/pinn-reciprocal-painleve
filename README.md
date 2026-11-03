@@ -5,7 +5,7 @@
 Code and data for the paper:
 
 > **Reciprocal Transform for Painlevé-Type Equations: A Mathematical Regularization with Physics-Informed Neural Network Verification**
-> Maryam Jalili, *Communications in Nonlinear Science and Numerical Simulation (CNSNS)* (submitted)
+> Maryam Jalili (2026). Submitted for publication.
 
 ## Abstract
 
@@ -75,7 +75,7 @@ All numerical results are in results/:
   title   = {Reciprocal Transform for {Painleve}-Type Equations:
              A Mathematical Regularization with Physics-Informed
              Neural Network Verification},
-  journal = {Communications in Nonlinear Science and Numerical Simulation},
+  journal = {(to be determined)},
   year    = {2026},
   note    = {submitted}
 }
