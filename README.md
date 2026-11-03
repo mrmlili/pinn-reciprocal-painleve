@@ -4,13 +4,12 @@
 
 Code and data for the paper:
 
-> **Reciprocal Transform for Painlevé-Type Equations: A Mathematical Regularization with Physics-Informed Neural Network Verification**
+> **Reciprocal Transform for Painlevé-Type Equations: An Empirical Study of PINN Performance Near Movable Singularities**
 > Maryam Jalili (2026). Submitted for publication.
 
 ## Abstract
 
-We propose the reciprocal transform w = 1/y as a regularization for second-order ODEs with movable poles, focusing on the prototype y'' = y^3 and Painlevé II. The transformation, together with the w^3-weighted residual (which is the natural residual for the reciprocal equation), reduces the median near-pole relative error by a factor of ~1450 for the prototype (10 seeds; median 517× vs 5-seed baseline) and ~139–523 for Painlevé II (5 seeds × 3 α, median). An ablation separates the transformation from the reweighting: the transformation alone and the reweighting alone both fail; only their combination produces the reciprocal-PINN result.
-
+We investigate the performance of physics-informed neural networks (PINNs) for second-order ODEs with movable singularities, focusing on the prototype y'' = y^3 and Painlevé II. We compare three representations: direct, rapidity, and reciprocal transform w = 1/y. The reciprocal representation reduces median near-pole error by up to three orders of magnitude but exhibits a 20% seed failure rate and a weak residual-error correlation. A double-pole test (y'' = 6y^2) yields a fitted scaling of δ^{-2.06}. The PINN is not competitive with DOP853 for single solves. These findings highlight both potential and limitations of PINNs for singular ODEs.
 ## Reproduce
 
 ```bash
@@ -73,8 +72,7 @@ All numerical results are in results/:
 @article{Jalili2026Reciprocal,
   author  = {Jalili, Maryam},
   title   = {Reciprocal Transform for {Painleve}-Type Equations:
-             A Mathematical Regularization with Physics-Informed
-             Neural Network Verification},
+             An Empirical Study of PINN Performance Near Movable Singularities},
   journal = {(to be determined)},
   year    = {2026},
   note    = {submitted}
