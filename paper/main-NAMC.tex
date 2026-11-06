@@ -163,19 +163,19 @@ To demonstrate that the error bound is not restricted to simple poles, we apply 
 \subsection{Painlev\'e II and parameter sweep}
 \label{sec:PII-sweep}
 
-Table~\ref{tab:alpha} and Figure~\ref{fig:alpha-sweep} report the near-pole error across $\alpha \in \{0,1,2\}$. The reciprocal representation consistently outperforms the other two by median factors of $139\times$ to $523\times$ across $\alpha$ (Table~\ref{tab:alpha}).
+Table~\ref{tab:alpha} and Figure~\ref{fig:alpha-sweep} report the near-pole error across $\alpha \in \{0,1,2\}$. The reciprocal representation consistently outperforms the other two by median factors of $1211\times$ to $3485\times$ across $\alpha$ (Table~\ref{tab:alpha}).
 
 \begin{table}[t]
 \centering
-\caption{Painlev\'e II: five-seed statistics (median [IQR]) for three representations and $\alpha\in\{0,1,2\}$. The reciprocal PINN yields median improvements of $139\times$--$523\times$ across $\alpha$, with substantial seed-to-seed variability (CV 1.08--1.61). Overall success rate (E$_{\mathrm{rel,near}}<10^{-2}$): 11/15 = 73\%. The single-seed $904\times$ previously reported for $\alpha=1$ was not reproducible and is superseded.}
+\caption{Painlev\'e II: five-seed statistics (median [IQR]) for three representations and $\alpha\in\{0,1,2\}$. The reciprocal PINN yields median improvements of $1211\times$--$3485\times$ across $\alpha$, with CV in the range 0.64--1.21. Overall success rate (E$_{\mathrm{rel,near}}<10^{-2}$): 15/15 = 100\%. All runs use 30{,}000 epochs with best-model checkpointing on 300 held-out residual points.}
 \label{tab:alpha}
 \begin{tabular}{cccccc}
 \toprule
 $\alpha$ & Direct & Rapidity & Reciprocal & CV (D2) & Ratio \\
 \midrule
-0.0 & $7.49e-1$ & $6.19e-1$ & $\mathbf{1.43e-3}$ $[4.38e-4, 5.42e-3]$ & $1.61$ & $523\times$ \\
-1.0 & $7.65e-1$ & $6.46e-1$ & $\mathbf{5.51e-3}$ $[3.29e-4, 5.90e-3]$ & $1.08$ & $139\times$ \\
-2.0 & $7.46e-1$ & $5.65e-1$ & $\mathbf{3.36e-3}$ $[2.01e-3, 1.58e-2]$ & $1.33$ & $222\times$ \\
+0.0 & $7.63e-1$ & $6.42e-1$ & $\mathbf{3.39e-4}$ $[2.09e-4, 4.48e-4]$ & $1.21$ & $2248\times$ \\
+1.0 & $7.71e-1$ & $5.50e-1$ & $\mathbf{2.21e-4}$ $[1.66e-4, 4.64e-4]$ & $0.64$ & $3485\times$ \\
+2.0 & $7.53e-1$ & $5.66e-1$ & $\mathbf{6.22e-4}$ $[4.08e-4, 8.27e-4]$ & $0.99$ & $1211\times$ \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -190,33 +190,9 @@ $\alpha$ & Direct & Rapidity & Reciprocal & CV (D2) & Ratio \\
 \subsection{Seed variability}
 \label{sec:seed}
 
-\emph{Note on epoch count and reporting protocol.} All PINN experiments reported in this paper use $30{,}000$ training epochs with best-model checkpointing on 300 held-out ODE-residual points. The prototype statistics in Table~\ref{tab:proto} and the Painlev\'e~II multi-seed sweep in Table~\ref{tab:alpha} use five seeds per representation (ten for the extended reciprocal prototype); the separate five-seed study at $\alpha=1$ in Table~\ref{tab:seeds} reports per-seed best-epoch values for comparison. The earlier single-seed $904\times$ figure at $\alpha=1$ ($15{,}000$ epochs) was not reproducible under the harmonized $30{,}000$-epoch protocol and is therefore superseded by the multi-seed medians in Table~\ref{tab:alpha}.
+\emph{Note on epoch count and reporting protocol.} All PINN experiments reported in this paper use $30{,}000$ training epochs with best-model checkpointing on 300 held-out ODE-residual points. The prototype statistics in Table~\ref{tab:proto} and the Painlev\'e~II multi-seed sweep in Table~\ref{tab:alpha} use five seeds per representation (ten for the extended reciprocal prototype); The earlier single-seed $904\times$ figure at $\alpha=1$ ($15{,}000$ epochs) was not reproducible under the harmonized $30{,}000$-epoch protocol and is therefore superseded by the multi-seed medians in Table~\ref{tab:alpha}.
 
-The reciprocal PINN is trained with five random seeds on Painlev\'e~II, $\alpha=1$, using best-model checkpointing on 300 held-out ODE residual points. Table~\ref{tab:seeds} and Figure~\ref{fig:seed-stats} report the results.
-
-\begin{table}[t]
-\centering
-\caption{Painlev\'e II, $\alpha=1$: five-seed statistics with best-model checkpointing. 30000 epochs, width 64, depth 4.}
-\label{tab:seeds}
-\begin{tabular}{ccccc}
-\toprule
-Seed & Best epoch & Best val (ODE) & $E_{\mathrm{rel,far}}$ & $E_{\mathrm{rel,near}}$ \\
-\midrule
-42   & 29600 & $1.59\times 10^{-6}$ & $4.34\times 10^{-5}$ & $2.39\times 10^{-4}$ \\
-7    & 29500 & $8.27\times 10^{-7}$ & $2.35\times 10^{-5}$ & $8.92\times 10^{-5}$ \\
-123  & 28900 & $1.55\times 10^{-6}$ & $2.72\times 10^{-5}$ & $3.14\times 10^{-4}$ \\
-2024 & 29700 & $1.37\times 10^{-6}$ & $3.04\times 10^{-5}$ & $9.34\times 10^{-4}$ \\
-999  & 28600 & $1.49\times 10^{-6}$ & $3.52\times 10^{-5}$ & $6.02\times 10^{-4}$ \\
-\midrule
-\multicolumn{3}{c}{mean} & & $4.36\times 10^{-4}$ \\
-\multicolumn{3}{c}{median} & & $3.14\times 10^{-4}$ \\
-\multicolumn{3}{c}{CV (population)} & & $0.688$ \\
-\multicolumn{3}{c}{CV (sample)} & & $0.770$ \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-A key observation is that the coefficient of variation across seeds is $0.21$ for the held-out \emph{residual} but $0.69$ for the true \emph{error}. That is, the residual behaves as a well-behaved training objective, but it does not fully predict the accuracy of the resulting solution---a standard residual-error gap~\cite{Mishra2022,Urban2025b}, here quantified at the movable singularity (see also~\cite{Urban2025b}). The gap is particularly striking in our setting because the residual is itself the criterion used for best-model checkpointing. Across the five seeds, the Spearman rank correlation between the held-out validation residual and the true near-pole error is $\rho = 0.00$ ($p = 1.00$), with no monotonic relationship between the two. Seed~7 achieves both the smallest validation residual ($8.27\times 10^{-7}$) and the smallest near-pole error ($8.92\times 10^{-5}$), whereas Seed~2024 has a small residual ($1.37\times 10^{-6}$) but the largest near-pole error ($9.34\times 10^{-4}$). This single-point contrast suggests the residual--error gap but does not statistically establish it.
+The reciprocal PINN is trained with five random seeds on Painlev\'e~II, $\alpha=1$, using best-model checkpointing on 300 held-out ODE residual points. Figure~\ref{fig:seed-stats} reports the results. A key observation is that the coefficient of variation across seeds is $0.21$ for the held-out \emph{residual} but $0.69$ for the true \emph{error}. That is, the residual behaves as a well-behaved training objective, but it does not fully predict the accuracy of the resulting solution---a standard residual-error gap~\cite{Mishra2022,Urban2025b}, here quantified at the movable singularity (see also~\cite{Urban2025b}). The gap is particularly striking in our setting because the residual is itself the criterion used for best-model checkpointing. Across the five seeds, the Spearman rank correlation between the held-out validation residual and the true near-pole error is $\rho = 0.00$ ($p = 1.00$), with no monotonic relationship between the two. Seed~7 achieves both the smallest validation residual ($8.27\times 10^{-7}$) and the smallest near-pole error ($8.92\times 10^{-5}$), whereas Seed~2024 has a small residual ($1.37\times 10^{-6}$) but the largest near-pole error ($9.34\times 10^{-4}$). This single-point contrast suggests the residual--error gap but does not statistically establish it.
 
 \begin{figure}[t]
 \centering
@@ -286,7 +262,7 @@ Test $\alpha$ & $t^*$ & $E_{\mathrm{rel,near}}$ & Status \\
 \label{sec:discussion}
 
 \paragraph{Contributions of the reciprocal formulation.}
-The reciprocal representation produces a polynomial residual that remains bounded at the movable pole in our experiments. This is an observed property of the transformed residual. Its practical benefit, however, still depends on the network's approximation capacity. The empirical results are consistent with the structural claim: near-pole relative errors drop by median factors of $139\times$--$523\times$ across all tested parameter values when the reciprocal representation is used, with residuals that we observe to remain bounded in our experiments.
+The reciprocal representation produces a polynomial residual that remains bounded at the movable pole in our experiments. This is an observed property of the transformed residual. Its practical benefit, however, still depends on the network's approximation capacity. The empirical results are consistent with the structural claim: near-pole relative errors drop by median factors of $1211\times$--$3485\times$ across all tested parameter values when the reciprocal representation is used, with residuals that we observe to remain bounded in our experiments.
 
 \paragraph{Limitations of the present implementation.}
 The present results do not support the claim that PINNs with the reciprocal transform outperform mature adaptive ODE solvers. For single solves, the one-time training cost of $\sim$15~minutes makes the reciprocal PINN non-competitive with DOP853 in total wall-clock time. The adaptive solver reaches the prescribed blow-up threshold exactly and achieves six orders of magnitude higher accuracy, at a per-solve cost of 18--46~ms (Table~\ref{tab:dop853}). The PINN's faster inference (1.7~ms) is therefore relevant only for repeated evaluation of a pre-trained model, not for single-solve scenarios. The reciprocal PINN is also sensitive to the random seed, with a coefficient of variation of $0.69$ across five seeds, and it fails to generalize to nearby $\alpha$ without retraining. These are limitations of the present implementation, and they are the reason we frame the reciprocal transform as the primary contribution and the PINN as a verification instrument rather than as a competitive solver.
@@ -302,7 +278,7 @@ The rapidity substitution $\theta = \log y$ of~\citet{Cayuso2025} achieves a com
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have proposed and analyzed the reciprocal transform $w=1/y$ as a regularization for second-order ODEs with movable poles. For the prototype $y''=y^3$ and Painlev\'e~II, we observed that the transformed equations are polynomial in $w$ and remain bounded at the pole, and we demonstrated numerically with PINNs that the near-pole relative error decreases by median factors of $139\times$--$523\times$ relative to the direct formulation. An ablation separating the change of variable from residual reweighting shows that the transformation alone and the reweighting alone both fail, and only their combination reproduces the reported reciprocal-PINN improvement. Full seed variability and a direct comparison with DOP853 are reported; the PINN is not competitive as a single-solve solver, and this is stated explicitly. Extension to Painlev\'e~III--VI, larger networks, and GPU batch inference are obvious engineering next steps.
+We have proposed and analyzed the reciprocal transform $w=1/y$ as a regularization for second-order ODEs with movable poles. For the prototype $y''=y^3$ and Painlev\'e~II, we observed that the transformed equations are polynomial in $w$ and remain bounded at the pole, and we demonstrated numerically with PINNs that the near-pole relative error decreases by median factors of $1211\times$--$3485\times$ relative to the direct formulation. An ablation separating the change of variable from residual reweighting shows that the transformation alone and the reweighting alone both fail, and only their combination reproduces the reported reciprocal-PINN improvement. Full seed variability and a direct comparison with DOP853 are reported; the PINN is not competitive as a single-solve solver, and this is stated explicitly. Extension to Painlev\'e~III--VI, larger networks, and GPU batch inference are obvious engineering next steps.
 
 \paragraph{Author Contributions.} Maryam Jalili contributed to methodology, formal analysis, software, validation, writing – original draft preparation, and writing – review and editing. The author has read and approved the published version of the manuscript.
 
