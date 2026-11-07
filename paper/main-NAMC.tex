@@ -278,6 +278,8 @@ The rapidity substitution $\theta = \log y$ of~\citet{Cayuso2025} achieves a com
 \section{Conclusion}
 \label{sec:conclusion}
 
+
+
 We have proposed and analyzed the reciprocal transform $w=1/y$ as a regularization for second-order ODEs with movable poles. For the prototype $y''=y^3$ and Painlev\'e~II, we observed that the transformed equations are polynomial in $w$ and remain bounded at the pole, and we demonstrated numerically with PINNs that the near-pole relative error decreases by median factors of $1211\times$--$3485\times$ relative to the direct formulation. An ablation separating the change of variable from residual reweighting shows that the transformation alone and the reweighting alone both fail, and only their combination reproduces the reported reciprocal-PINN improvement. Full seed variability and a direct comparison with DOP853 are reported; the PINN is not competitive as a single-solve solver, and this is stated explicitly. Extension to Painlev\'e~III--VI, larger networks, and GPU batch inference are obvious engineering next steps.
 
 \paragraph{Author Contributions.} Maryam Jalili contributed to methodology, formal analysis, software, validation, writing – original draft preparation, and writing – review and editing. The author has read and approved the published version of the manuscript.
